@@ -1406,7 +1406,7 @@
     /* ═══════════════════════════════════════════════════════════
        GOOGLE AUTH CONFIG
     ═══════════════════════════════════════════════════════════ */
-    const CLIENT_ID = '561675105013-56irhhkg6019fgg9i9ci7rkm8c7e9am5.apps.googleusercontent.com';
+    let CLIENT_ID = ''; 
     const SCOPES    = [
       'https://www.googleapis.com/auth/gmail.readonly',
       'https://www.googleapis.com/auth/calendar.readonly',
@@ -1416,8 +1416,28 @@
     let tokenClient;
     let accessToken = null;
 
+    /* ── Load config from .env folder ─────────────────────────── */
+    async function loadConfig() {
+      try {
+        const response = await fetch('.env/config.json');
+        if (!response.ok) throw new Error('Could not load .env/config.json');
+        const config = await response.json();
+        CLIENT_ID = config.GOOGLE_CLIENT_ID;
+        return true;
+      } catch (error) {
+        console.error('Error loading configuration:', error);
+        return false;
+      }
+    }
+
     /* ── Initialize GSI after library loads ────────────────────── */
-    window.addEventListener('load', () => {
+    window.addEventListener('load', async () => {
+      const configLoaded = await loadConfig();
+      if (!configLoaded) {
+          console.error('Configuration failed to load. Google Auth will not be initialized.');
+          return;
+      }
+
       // Poll until GSI is ready (loaded async)
       const waitGSI = setInterval(() => {
         if (!window.google) return;
